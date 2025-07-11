@@ -21,7 +21,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   const content = (
     <View style={[styles.container, overlay && styles.overlay]}>
-      <View style={styles.spinner}>
+      <View style={styles.spinner} className="bg-white dark:bg-black">
         <ActivityIndicator size={customSize || spinnerSize} color={color} />
         {text && <Text style={[styles.text, { color }]}>{text}</Text>}
       </View>
@@ -57,7 +57,6 @@ const styles = StyleSheet.create({
   },
 
   spinner: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',

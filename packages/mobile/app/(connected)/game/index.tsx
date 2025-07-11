@@ -1,6 +1,6 @@
 import type { HidingSpot } from '@hide-and-seek/shared';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Dimensions, Image, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { PlayerCard } from '@/components/game';
 import { Button, LoadingSpinner, Text } from '@/components/ui';
@@ -15,29 +15,25 @@ export default function GameScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { currentRoom, leaveRoom } = useRoomStore();
-  const { selectHidingSpot, seekAtSpot, gameState, seekerActions, seekerFeedback, error, clearError } = useGameStore();
+  const { selectHidingSpot, gameState, error, clearError, seekerActions } = useGameStore();
 
   const [selectedSpot, setSelectedSpot] = useState<string | null>(null);
   const [isPerformingAction, setIsPerformingAction] = useState(false);
   const [currentTimeLeft, setCurrentTimeLeft] = useState(0);
 
-  const getSeekerUsername = (): string | null => {
+  const getSeekerUsername = useCallback((): string | null => {
     if (!gameState.seeker || !currentRoom) return null;
+
     const seekerPlayer = currentRoom.players.find((p) => p.socketId === gameState.seeker);
     return seekerPlayer ? seekerPlayer.username : null;
-  };
+  }, [gameState.seeker, currentRoom]);
 
-  const isCurrentPlayerSeeker = (): boolean => {
+  const isCurrentPlayerSeeker = useCallback((): boolean => {
     const seekerUsername = getSeekerUsername();
     const isSeeker = seekerUsername === user?.username;
-    console.log('Seeker check:', {
-      seekerUsername,
-      currentUsername: user?.username,
-      isSeeker,
-      seekerId: gameState.seeker,
-    });
+
     return isSeeker;
-  };
+  }, [user?.username, getSeekerUsername]);
 
   useEffect(() => {
     if (gameState.phase === 'hiding' && gameState.timeLeft > 0) {
@@ -83,26 +79,19 @@ export default function GameScreen() {
     const isSeeker = isCurrentPlayerSeeker();
 
     if (gamePhase === 'hiding' && !isSeeker) {
-      // Hiding phase - select hiding spot
       setIsPerformingAction(true);
       try {
-        await selectHidingSpot(spotId);
+        await selectHidingSpot({ spotId });
         setSelectedSpot(spotId);
       } catch (error) {
         Alert.alert('Error', error instanceof Error ? error.message : 'Failed to select hiding spot');
       } finally {
         setIsPerformingAction(false);
       }
-    } else if (gamePhase === 'seeking' && isSeeker) {
-      // Seeking phase - seek at spot
-      setIsPerformingAction(true);
-      try {
-        await seekAtSpot(spotId);
-      } catch (error) {
-        Alert.alert('Error', error instanceof Error ? error.message : 'Failed to seek at spot');
-      } finally {
-        setIsPerformingAction(false);
-      }
+    }
+
+    if (gamePhase === 'seeking' && isSeeker) {
+      // TODO: Implement seeking logic
     }
   };
 
@@ -113,7 +102,6 @@ export default function GameScreen() {
 
     const isOccupied = isSeeker ? false : spot.isOccupied;
     const hasBeenChecked = seekerActions[spot.id];
-    const isFeedbackSpot = seekerFeedback?.spotId === spot.id;
 
     let spotColor = '#007AFF';
     let spotOpacity = 0.7;
@@ -125,11 +113,6 @@ export default function GameScreen() {
     } else if (hasBeenChecked) {
       spotColor = seekerActions[spot.id].found ? '#FF6B35' : '#6C757D';
       spotOpacity = 0.4;
-    }
-
-    if (isFeedbackSpot) {
-      spotColor = seekerFeedback!.found ? '#28A745' : '#DC3545';
-      spotOpacity = 0.9;
     }
 
     const canInteract =
@@ -147,8 +130,6 @@ export default function GameScreen() {
             height: (spot.height / 600) * screenHeight * 0.4,
             backgroundColor: canInteract ? spotColor : '#6C757D',
             opacity: canInteract ? spotOpacity : 0.3,
-            borderWidth: isFeedbackSpot ? 3 : hasBeenChecked ? 2 : 0,
-            borderColor: isFeedbackSpot ? (seekerFeedback!.found ? '#28A745' : '#DC3545') : '#FFD700',
           },
         ]}
         onPress={() => handleSpotPress(spot.id)}
@@ -184,7 +165,7 @@ export default function GameScreen() {
     }
   };
 
-  const getPhaseSubtitle = () => {
+  const getPhaseSubtitle = useCallback(() => {
     if (!currentRoom) return '';
 
     const phase = gameState.phase;
@@ -205,13 +186,12 @@ export default function GameScreen() {
       default:
         return '';
     }
-  };
+  }, [currentRoom, gameState, isCurrentPlayerSeeker, currentTimeLeft]);
 
   const renderGamePhase = () => {
     if (!currentRoom) return null;
 
     const phase = gameState.phase;
-    // const isSeeker = isCurrentPlayerSeeker();
 
     if (phase === 'results' || phase === 'ended') {
       // Sort players: winner first, then others
@@ -235,7 +215,7 @@ export default function GameScreen() {
             {phase === 'ended' && gameState.winner && (
               <View style={styles.winnerHeader}>
                 <Text style={styles.winnerEmoji}>🏆</Text>
-                <Text style={styles.winnerTitle}>Winner: {gameState.winner.name}</Text>
+                <Text style={styles.winnerTitle}>Winner: {gameState.winner.username}</Text>
               </View>
             )}
 
@@ -260,11 +240,6 @@ export default function GameScreen() {
         </View>
       );
     }
-
-    console.log('Current Room:', currentRoom);
-    console.log('Game State:', gameState);
-    console.log('Seeker Username:', getSeekerUsername());
-    console.log('Is Current Player Seeker:', isCurrentPlayerSeeker());
 
     return (
       <View style={styles.gameContainer}>

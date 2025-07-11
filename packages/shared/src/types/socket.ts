@@ -1,3 +1,4 @@
+import type { SelectHidingSpotPayload } from './game';
 import type {
   CreateRoomPayload,
   FetchAvailableRoomsPayload,
@@ -33,4 +34,5 @@ export type ClientToServerEvents = {
   joinRoomWithCode: (payload: JoinRoomWithCodePayload, callback: (response: SocketResponse<Room>) => void) => void;
   leaveRoom: (payload: LeaveRoomPayload, callback: (response: SocketResponse<void>) => void) => void;
   startGame: (payload: StartGamePayload, callback: (response: SocketResponse<Room>) => void) => void;
+  selectHidingSpot: (payload: SelectHidingSpotPayload, callback: (response: SocketResponse<void>) => void) => void;
 };

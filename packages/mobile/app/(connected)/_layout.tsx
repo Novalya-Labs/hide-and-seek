@@ -16,7 +16,7 @@ const ConnectedLayout: React.FC = () => {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="lobby/index" />
       <Stack.Screen name="lobby/waiting" />
-      <Stack.Screen name="game" />
+      <Stack.Screen name="game/index" options={{ animation: 'fade' }} />
     </Stack>
   );
 };
