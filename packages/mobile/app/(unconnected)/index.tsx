@@ -78,7 +78,6 @@ const WelcomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   content: {
     flex: 1,
@@ -102,14 +101,11 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     marginBottom: 32,
   },
-  features: {
-    alignItems: 'center',
-  },
+  features: {},
 
   featuresTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#212529',
     marginBottom: 12,
   },
 

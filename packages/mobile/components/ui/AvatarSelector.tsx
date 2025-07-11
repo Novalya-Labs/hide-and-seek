@@ -1,6 +1,6 @@
-import type React from 'react';
-import { Image, type ImageSourcePropType, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, type ImageSourcePropType, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AVATARS } from '@/constants/Avatars';
+import { Text } from './Text';
 
 interface AvatarSelectorProps {
   selectedAvatar?: string;

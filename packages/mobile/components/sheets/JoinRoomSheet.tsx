@@ -7,7 +7,6 @@ import {
   BottomSheetView,
 } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
-import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Button, Text } from '@/components/ui';
@@ -100,7 +99,7 @@ const JoinRoomSheet: React.FC<JoinRoomSheetProps> = ({ visible, onClose }) => {
             placeholder="Room Code"
             value={roomCode}
             onChangeText={setRoomCode}
-            className="mb-4 p-4 border border-gray-200 dark:border-neutral-800 rounded-lg"
+            className="mb-4 p-4 border border-gray-200 dark:border-neutral-800 rounded-lg text-black dark:text-white"
           />
         </View>
 

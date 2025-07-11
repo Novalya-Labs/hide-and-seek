@@ -1,4 +1,3 @@
-import type React from 'react';
 import { forwardRef, useState } from 'react';
 import {
   type NativeSyntheticEvent,

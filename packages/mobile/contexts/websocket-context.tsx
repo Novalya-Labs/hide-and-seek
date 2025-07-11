@@ -15,17 +15,14 @@ const WebSocketContext = createContext<WebSocketContextType>({
 });
 
 export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user, setSocketId } = useAuthStore();
+  const { user } = useAuthStore();
   const { isListening } = useRoomEvents();
 
   useEffect(() => {
-    if (user && !user.socketId) {
-      const socketId = socketService.connect(Env.WS_URL);
-      if (socketId) {
-        setSocketId(socketId);
-      }
+    if (user && !user?.socketId) {
+      socketService.connect(Env.WS_URL);
     }
-  }, [user, setSocketId]);
+  }, [user]);
 
   const payload: WebSocketContextType = {
     isConnected: !!user?.socketId,

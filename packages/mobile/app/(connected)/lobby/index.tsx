@@ -66,7 +66,7 @@ const LobbyScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <View style={styles.header} className="border-b border-gray-200 dark:border-gray-800">
         <View style={styles.userInfo}>
           <PlayerAvatar avatar={user?.avatar} size="small" />
           <Text weight="bold">{user?.username}</Text>
@@ -141,22 +141,17 @@ const LobbyScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
-
   scrollView: {
     paddingTop: 16,
     flex: 1,
   },
-
   header: {
     paddingHorizontal: 12,
     paddingVertical: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E7',
   },
 
   title: {
@@ -245,7 +240,6 @@ const styles = StyleSheet.create({
   roomsTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#212529',
   },
 
   noRoomsText: {

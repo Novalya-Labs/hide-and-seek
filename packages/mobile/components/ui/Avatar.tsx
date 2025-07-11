@@ -1,7 +1,6 @@
-import type React from 'react';
 import { Image, type ImageSourcePropType, type ImageStyle, type StyleProp, View, type ViewStyle } from 'react-native';
 import { twMerge } from 'tailwind-merge';
-import Text from './Text';
+import { Text } from './Text';
 
 interface AvatarProps {
   imageUri?: string;

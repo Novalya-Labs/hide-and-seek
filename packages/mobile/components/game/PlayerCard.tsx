@@ -1,6 +1,6 @@
 import type { Player, RoomStatus } from '@hide-and-seek/shared';
-import { StyleSheet, Text, View } from 'react-native';
-import { PlayerAvatar } from '../ui';
+import { StyleSheet, View } from 'react-native';
+import { PlayerAvatar, Text } from '../ui';
 
 interface PlayerCardProps {
   player: Player;
@@ -109,12 +109,10 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#212529',
     marginBottom: 4,
   },
 
   eliminatedText: {
-    color: '#6C757D',
     textDecorationLine: 'line-through',
   },
 

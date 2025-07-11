@@ -1,5 +1,6 @@
 import type { RoomSummary } from '@hide-and-seek/shared';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '../ui';
 
 interface RoomCardProps {
   room: RoomSummary;
@@ -95,7 +96,6 @@ const styles = StyleSheet.create({
   roomId: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#212529',
   },
 
   privateBadge: {
@@ -107,7 +107,6 @@ const styles = StyleSheet.create({
   },
 
   privateBadgeText: {
-    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -141,13 +140,11 @@ const styles = StyleSheet.create({
 
   detailLabel: {
     fontSize: 14,
-    color: '#6C757D',
   },
 
   detailValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#212529',
   },
 
   fullText: {
@@ -173,12 +170,10 @@ const styles = StyleSheet.create({
   },
 
   joinButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+    color: '#ffffff',
   },
 
-  joinButtonTextDisabled: {
-    color: '#6C757D',
-  },
+  joinButtonTextDisabled: {},
 });

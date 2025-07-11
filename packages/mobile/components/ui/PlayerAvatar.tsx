@@ -1,4 +1,3 @@
-import type React from 'react';
 import { Image, type ImageSourcePropType, type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 
 interface PlayerAvatarProps {

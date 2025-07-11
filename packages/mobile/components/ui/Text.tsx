@@ -1,7 +1,5 @@
-import type React from 'react';
 import { Text as RNText, type TextProps as RNTextProps } from 'react-native';
 import { twMerge } from 'tailwind-merge';
-import { useTheme } from '@/contexts/theme-context';
 
 export interface TextProps extends RNTextProps {
   /**
@@ -42,8 +40,6 @@ export const Text: React.FC<TextProps> = ({
   style,
   ...props
 }) => {
-  const { isDarkMode } = useTheme();
-  // Base variant styles with sizes and line heights
   const variantClasses = {
     h1: 'text-4xl leading-tight',
     h2: 'text-3xl leading-tight',
@@ -54,21 +50,18 @@ export const Text: React.FC<TextProps> = ({
     label: 'text-base leading-tight',
   };
 
-  // Default variant colors if no color is specified
   const defaultColors = {
-    h1: isDarkMode ? 'text-white' : 'text-black',
-    h2: isDarkMode ? 'text-white' : 'text-black',
-    h3: isDarkMode ? 'text-white' : 'text-black',
-    h4: isDarkMode ? 'text-white' : 'text-black',
-    body: isDarkMode ? 'text-white' : 'text-black',
-    'body-sm': isDarkMode ? 'text-white' : 'text-black',
-    label: isDarkMode ? 'text-white' : 'text-black',
+    h1: 'dark:text-white text-black',
+    h2: 'dark:text-white text-black',
+    h3: 'dark:text-white text-black',
+    h4: 'dark:text-white text-black',
+    body: 'dark:text-white text-black',
+    'body-sm': 'dark:text-white text-black',
+    label: 'dark:text-white text-black',
   };
 
-  // Text alignment
   const alignmentClass = center ? 'text-center' : '';
 
-  // Custom color class if provided
   const colorClass = color || defaultColors[variant];
 
   const fontFamily = (weight: string) => {

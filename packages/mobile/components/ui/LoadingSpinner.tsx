@@ -1,5 +1,5 @@
-import type React from 'react';
-import { ActivityIndicator, Modal, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, StyleSheet, View } from 'react-native';
+import { Text } from './Text';
 
 interface LoadingSpinnerProps {
   size?: 'small' | 'medium' | 'large';

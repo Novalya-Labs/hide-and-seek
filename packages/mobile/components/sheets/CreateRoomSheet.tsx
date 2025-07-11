@@ -112,7 +112,7 @@ const CreateRoomSheet: React.FC<CreateRoomSheetProps> = ({ visible, onClose }) =
             value={maxPlayers.toString()}
             onChangeText={(text) => setMaxPlayers(Number.parseInt(text))}
             keyboardType="numeric"
-            className="mb-4 p-4 border border-gray-200 dark:border-neutral-800 rounded-lg"
+            className="mb-4 p-4 border border-gray-200 dark:border-neutral-800 rounded-lg dark:text-white"
           />
 
           <View className="flex-row justify-between items-center mb-4">

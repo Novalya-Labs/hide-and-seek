@@ -92,7 +92,7 @@ export const Button: React.FC<ButtonProps> = ({
   const textClasses = {
     primary: 'text-white',
     secondary: 'text-black dark:text-white',
-    outline: 'text-primary-800',
+    outline: 'text-primary-800 dark:text-primary-400',
     link: 'text-black',
     destructive: 'text-white',
   };

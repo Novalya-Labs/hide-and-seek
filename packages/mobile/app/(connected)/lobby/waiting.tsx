@@ -6,7 +6,6 @@ import { PlayerCard } from '@/components/game';
 import { Button, LoadingSpinner, Text } from '@/components/ui';
 import { useAuthStore } from '@/features/auth/authStore';
 import { useRoomStore } from '@/features/room/roomStore';
-import { socketService } from '@/services/socket.service';
 
 export default function WaitingRoomScreen() {
   const router = useRouter();
@@ -21,14 +20,6 @@ export default function WaitingRoomScreen() {
   useEffect(() => {
     if (!currentRoom) {
       router.replace('/lobby');
-      return;
-    }
-
-    // Check socket connection
-    const connectionStatus = socketService.getConnectionStatus();
-    if (!connectionStatus.isConnected) {
-      Alert.alert('Connection Lost', 'Connection to game server lost. Please restart the app.');
-      router.replace('/');
       return;
     }
   }, [currentRoom, router]);
@@ -79,7 +70,7 @@ export default function WaitingRoomScreen() {
     }
   };
 
-  const isHost = currentRoom?.players.find((p) => p.socketId === user?.socketId) ?? false;
+  const isHost = currentRoom?.players.find((p) => p.socketId === user?.socketId)?.isHost ?? false;
   const canStartGame = isHost && currentRoom && currentRoom.players.length >= 2;
   const isLoadingHostStatus = !user?.username || !currentRoom?.players || currentRoom.players.length === 0;
 
@@ -153,9 +144,14 @@ export default function WaitingRoomScreen() {
             <Button label="Start Game" onPress={() => {}} loading={true} disabled={true} size="large" />
           </View>
         ) : isHost ? (
-          <View style={styles.hostCard}>
-            <Text style={styles.hostTitle}>Host Controls</Text>
-            <Text style={styles.hostSubtitle}>
+          <View
+            style={styles.hostCard}
+            className="border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900"
+          >
+            <Text style={styles.hostTitle} className="text-blue-700 dark:text-blue-300">
+              Host Controls
+            </Text>
+            <Text style={styles.hostSubtitle} className="text-blue-700 dark:text-blue-300">
               {canStartGame ? 'You can start the game now!' : 'Wait for more players to join'}
             </Text>
 
@@ -174,7 +170,7 @@ export default function WaitingRoomScreen() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={styles.footer} className="border-t border-gray-200 dark:border-gray-800">
         <Button
           label="Leave Room"
           onPress={handleLeaveRoom}
@@ -200,7 +196,6 @@ export default function WaitingRoomScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
 
   scrollView: {
@@ -215,7 +210,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#212529',
     marginBottom: 4,
   },
 
@@ -242,13 +236,11 @@ const styles = StyleSheet.create({
 
   infoLabel: {
     fontSize: 16,
-    color: '#6C757D',
   },
 
   infoValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#212529',
   },
 
   codeContainer: {
@@ -272,7 +264,6 @@ const styles = StyleSheet.create({
   playersTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#212529',
     marginBottom: 16,
   },
 
@@ -292,19 +283,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     borderRadius: 10,
     marginBottom: 24,
-    backgroundColor: '#E3F2FD',
   },
 
   hostTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1976D2',
     marginBottom: 4,
   },
 
   hostSubtitle: {
     fontSize: 14,
-    color: '#1976D2',
     marginBottom: 16,
   },
 
@@ -323,9 +311,6 @@ const styles = StyleSheet.create({
   footer: {
     padding: 24,
     paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5E7',
-    backgroundColor: '#FFFFFF',
   },
 
   errorContainer: {

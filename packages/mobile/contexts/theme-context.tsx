@@ -1,7 +1,7 @@
 import { useColorScheme as useColorSchemeNativewind } from 'nativewind';
 import type React from 'react';
 import { createContext, type ReactNode, useContext, useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import { useAuthStore } from '@/features/auth/authStore';
 
 interface ThemeContextType {
@@ -23,7 +23,13 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setColorScheme(theme === 'light' ? 'light' : theme === 'dark' ? 'dark' : 'system');
   }, [theme, setColorScheme]);
 
-  return <ThemeContext.Provider value={{ isDarkMode }}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={{ isDarkMode }}>
+      <View style={{ flex: 1 }} className="bg-background">
+        {children}
+      </View>
+    </ThemeContext.Provider>
+  );
 };
 
 export const useTheme = () => {

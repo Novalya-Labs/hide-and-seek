@@ -1,4 +1,3 @@
-import type React from 'react';
 import { Platform, Switch as RNSwitch, type SwitchProps as RNSwitchProps, StyleSheet } from 'react-native';
 
 interface SwitchProps extends Omit<RNSwitchProps, 'trackColor' | 'thumbColor'> {

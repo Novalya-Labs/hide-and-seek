@@ -1,5 +1,6 @@
 import type { ClientToServerEvents, ServerToClientEvents } from '@hide-and-seek/shared';
 import { io, type Socket } from 'socket.io-client';
+import { useAuthStore } from '@/features/auth/authStore';
 import type { SocketConnectionStatus } from '@/types/socket';
 
 class SocketService {
@@ -10,9 +11,9 @@ class SocketService {
   };
   private listeners: Map<string, (status: SocketConnectionStatus) => void> = new Map();
 
-  connect(serverUrl: string): string | null {
+  connect(serverUrl: string): void {
     if (this.socket?.connected) {
-      return this.socket.id ?? null;
+      return;
     }
 
     this.updateConnectionStatus({ isConnecting: true, isConnected: false });
@@ -31,6 +32,9 @@ class SocketService {
     this.socket.on('connect', () => {
       console.log('Socket connected successfully');
       this.updateConnectionStatus({ isConnected: true, isConnecting: false });
+      if (this.socket?.id) {
+        useAuthStore.getState().setSocketId(this.socket.id);
+      }
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -48,8 +52,6 @@ class SocketService {
         isConnecting: false,
       });
     });
-
-    return this.socket?.id ?? null;
   }
 
   disconnect(): void {
