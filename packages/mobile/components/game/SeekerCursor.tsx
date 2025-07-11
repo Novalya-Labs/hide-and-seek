@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import { PanGestureHandler, type PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { PlayerAvatar } from '@/components/ui';
 import { useGameStore } from '@/features/game/gameStore';
 
@@ -53,48 +53,38 @@ export const SeekerCursor: React.FC<SeekerCursorProps> = ({
     [mapWidth, mapHeight, containerWidth, containerHeight, moveSeekerTo],
   );
 
-  const onPanGestureEvent = useCallback(
-    (event: PanGestureHandlerGestureEvent) => {
-      if (!isCurrentSeeker) return;
+  const panGesture = useCallback(
+    () =>
+      Gesture.Pan()
+        .onBegin((event) => {
+          if (!isCurrentSeeker) return;
 
-      const { absoluteX, absoluteY } = event.nativeEvent;
+          setIsDragging(true);
+          cursorX.setValue(event.absoluteX);
+          cursorY.setValue(event.absoluteY);
+          updateSeekerPosition(event.absoluteX, event.absoluteY);
 
-      // Update cursor position immediately
-      cursorX.setValue(absoluteX);
-      cursorY.setValue(absoluteY);
+          Animated.spring(scale, {
+            toValue: 1.2,
+            useNativeDriver: true,
+          }).start();
+        })
+        .onUpdate((event) => {
+          if (!isCurrentSeeker) return;
 
-      // Update seeker position
-      updateSeekerPosition(absoluteX, absoluteY);
-    },
-    [isCurrentSeeker, updateSeekerPosition, cursorX, cursorY],
-  );
-
-  const onPanHandlerStateChange = useCallback(
-    (event: any) => {
-      const { state, absoluteX, absoluteY } = event.nativeEvent;
-
-      if (state === 2) {
-        // BEGAN - teleport cursor to touch position
-        setIsDragging(true);
-        cursorX.setValue(absoluteX);
-        cursorY.setValue(absoluteY);
-        updateSeekerPosition(absoluteX, absoluteY);
-
-        Animated.spring(scale, {
-          toValue: 1.2,
-          useNativeDriver: true,
-        }).start();
-      } else if (state === 3 || state === 4 || state === 5) {
-        // END, CANCELLED, FAILED
-        setIsDragging(false);
-        Animated.spring(scale, {
-          toValue: 1,
-          useNativeDriver: true,
-        }).start();
-      }
-    },
-    [scale, cursorX, cursorY, updateSeekerPosition],
-  );
+          cursorX.setValue(event.absoluteX);
+          cursorY.setValue(event.absoluteY);
+          updateSeekerPosition(event.absoluteX, event.absoluteY);
+        })
+        .onEnd(() => {
+          setIsDragging(false);
+          Animated.spring(scale, {
+            toValue: 1,
+            useNativeDriver: true,
+          }).start();
+        }),
+    [isCurrentSeeker, cursorX, cursorY, updateSeekerPosition, scale],
+  )();
 
   // Update cursor position when seeker position changes from server
   useEffect(() => {
@@ -136,13 +126,9 @@ export const SeekerCursor: React.FC<SeekerCursorProps> = ({
   if (isCurrentSeeker) {
     return (
       <View style={styles.mapTouchArea}>
-        <PanGestureHandler
-          onGestureEvent={onPanGestureEvent}
-          onHandlerStateChange={onPanHandlerStateChange}
-          enableTrackpadTwoFingerGesture={false}
-        >
+        <GestureDetector gesture={panGesture}>
           <Animated.View style={styles.fullMapArea}>{CursorComponent}</Animated.View>
-        </PanGestureHandler>
+        </GestureDetector>
       </View>
     );
   }
