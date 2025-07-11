@@ -1,0 +1,107 @@
+{
+  "name": "@hide-and-seek/mobile",
+  "private": true,
+  "description": "A mobile app for the Hide and Seek project",
+  "main": "index.js",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "expo start -c",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "build-android": "npx expo run:android",
+    "build-ios": "npx expo run:ios",
+    "build-ios-device": "npx expo run:ios --device",
+    "build-ios-local": "eas build --profile production --platform ios --local --output production-ios-local.ipa",
+    "build-android-local": "eas build --profile production --platform android --local --output production-android-local.aab",
+    "eas-update": "eas update --branch production",
+    "test": "jest --watchAll",
+    "lint": "biome check --write",
+    "format": "biome format --write",
+    "prebuild": "npx expo prebuild",
+    "clean": "rm -fr .expo node_modules dist ios android"
+  },
+  "jest": {
+    "preset": "jest-expo"
+  },
+  "dependencies": {
+    "@backpackapp-io/react-native-toast": "^0.14.0",
+    "@expo/metro-runtime": "~5.0.4",
+    "@expo/vector-icons": "^14.1.0",
+    "@gorhom/bottom-sheet": "^5",
+    "@hide-and-seek/shared": "workspace:*",
+    "@hookform/resolvers": "^5.1.1",
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-picker/picker": "^2.11.1",
+    "@react-navigation/bottom-tabs": "^7.3.10",
+    "@react-navigation/elements": "^2.3.8",
+    "@react-navigation/native": "^7.1.6",
+    "@sentry/react-native": "~6.14.0",
+    "@supabase/supabase-js": "^2.50.3",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "date-fns": "^4.1.0",
+    "expo": "~53.0.19",
+    "expo-auth-session": "~6.2.1",
+    "expo-blur": "~14.1.5",
+    "expo-constants": "~17.1.7",
+    "expo-device": "^7.1.4",
+    "expo-font": "~13.3.2",
+    "expo-haptics": "~14.1.4",
+    "expo-image": "~2.3.2",
+    "expo-keep-awake": "~14.1.4",
+    "expo-linear-gradient": "~14.1.5",
+    "expo-linking": "~7.1.7",
+    "expo-notifications": "~0.31.4",
+    "expo-router": "~5.1.3",
+    "expo-secure-store": "^14.2.3",
+    "expo-sharing": "^13.1.5",
+    "expo-splash-screen": "~0.30.10",
+    "expo-status-bar": "~2.2.3",
+    "expo-symbols": "~0.4.5",
+    "expo-system-ui": "~5.0.10",
+    "expo-updates": "~0.28.17",
+    "expo-web-browser": "~14.2.0",
+    "lucide-react-native": "^0.525.0",
+    "nativewind": "^4.1.23",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-hook-form": "^7.56.3",
+    "react-native": "0.79.5",
+    "react-native-chart-kit": "^6.12.0",
+    "react-native-css-interop": "^0.1.22",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-keyboard-controller": "^1.17.5",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
+    "react-native-svg": "15.11.2",
+    "react-native-web": "~0.20.0",
+    "react-native-webview": "13.13.5",
+    "socket.io-client": "^4.8.1",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^3.4.11",
+    "zod": "^3.25.76",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/plugin-transform-react-jsx": "^7.27.1",
+    "@biomejs/biome": "^2.1.1",
+    "@types/react": "~19.0.10",
+    "babel-preset-expo": "^13.0.0",
+    "typescript": "~5.8.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20.18.0"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "enabled": false
+      }
+    }
+  }
+}

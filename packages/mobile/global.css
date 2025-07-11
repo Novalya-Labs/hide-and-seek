@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary-50: 13, 128, 242;
+  --color-primary-100: 13, 128, 242;
+  --color-primary-200: 13, 128, 242;
+  --color-primary-300: 13, 128, 242;
+  --color-primary-400: 13, 128, 242;
+  --color-primary-500: 13, 128, 242;
+  --color-primary-600: 13, 128, 242;
+  --color-primary-700: 13, 128, 242;
+  --color-primary-800: 13, 128, 242;
+  --color-primary-900: 13, 128, 242;
+
+
+  --color-secondary-50: 219, 232, 242;
+  --color-secondary-100: 182, 214, 233;
+  --color-secondary-200: 145, 196, 223;
+  --color-secondary-300: 108, 178, 213;
+  --color-secondary-400: 71, 160, 203;
+  --color-secondary-500: 34, 142, 193;
+  --color-secondary-600: 30, 126, 175;
+  --color-secondary-700: 26, 110, 157;
+  --color-secondary-800: 22, 94, 139;
+  --color-secondary-900: 18, 78, 121;
+}

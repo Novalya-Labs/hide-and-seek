@@ -1,0 +1,25 @@
+{
+  "name": "@hide-and-seek/server",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "NODE_ENV=development tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "NODE_ENV=production node dist/index.js",
+    "clean": "rm -rf dist node_modules"
+  },
+  "dependencies": {
+    "@hide-and-seek/shared": "workspace:*",
+    "socket.io": "^4.8.1",
+    "express": "^5.1.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "@types/node": "^24.0.13",
+    "@types/express": "^5.0.3",
+    "@types/cors": "^2.8.19"
+  }
+}

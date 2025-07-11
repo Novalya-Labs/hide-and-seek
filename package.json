@@ -1,0 +1,42 @@
+{
+  "name": "hide-and-seek",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  },
+  "scripts": {
+    "dev-mobile": "pnpm --filter @hide-and-seek/mobile start",
+    "dev-server": "pnpm --filter @hide-and-seek/server dev",
+    "start-mobile-ios": "pnpm --filter @hide-and-seek/mobile ios",
+    "start-mobile-android": "pnpm --filter @hide-and-seek/mobile android",
+    "prebuild-mobile": "pnpm --filter @hide-and-seek/mobile prebuild",
+    "build-mobile-ios": "pnpm --filter @hide-and-seek/mobile build-ios-local",
+    "build-mobile-android": "pnpm --filter @hide-and-seek/mobile build-android-local",
+    "eas-update-mobile": "pnpm --filter @hide-and-seek/mobile eas-update",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "biome format --write",
+    "lint": "biome check --write",
+    "clean:mobile": "cd packages/mobile && npm run clean",
+    "clean:server": "cd packages/server && npm run clean",
+    "clean": "rm -fr node_modules && npm run clean:mobile && npm run clean:server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Novalya-Labs/hide-and-seek.git"
+  },
+  "keywords": [],
+  "author": "Enzo Candotti <enzo@novalya.dev>",
+  "bugs": {
+    "url": "https://github.com/Novalya-Labs/hide-and-seek/issues"
+  },
+  "homepage": "https://github.com/Novalya-Labs/hide-and-seek#readme",
+  "packageManager": "pnpm@10.13.1+sha512.37ebf1a5c7a30d5fabe0c5df44ee8da4c965ca0c5af3dbab28c3a1681b70a256218d05c81c9c0dcf767ef6b8551eb5b960042b9ed4300c59242336377e01cfad",
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.1"
+  }
+}
