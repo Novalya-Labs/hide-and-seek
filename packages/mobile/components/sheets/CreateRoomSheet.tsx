@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'expo-router';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollView, Switch, View } from 'react-native';
+import { Image, ScrollView, Switch, TouchableOpacity, View } from 'react-native';
 import { Button, Text } from '@/components/ui';
 import { MAPS } from '@/constants/Maps';
 import { useTheme } from '@/contexts/theme-context';
@@ -29,7 +29,7 @@ const CreateRoomSheet: React.FC<CreateRoomSheetProps> = ({ visible, onClose }) =
   const sheetRef = useRef<BottomSheetModal>(null);
   const { createRoom, isCreating } = useRoomStore();
 
-  const [maxPlayers, setMaxPlayers] = useState('4');
+  const [maxPlayers, setMaxPlayers] = useState(2);
   const [isPrivate, setIsPrivate] = useState(false);
   const [selectedMap, setSelectedMap] = useState(MAPS[0].id);
 
@@ -50,7 +50,7 @@ const CreateRoomSheet: React.FC<CreateRoomSheetProps> = ({ visible, onClose }) =
 
     try {
       await createRoom({
-        maxPlayers: Number.parseInt(maxPlayers),
+        maxPlayers,
         isPrivate,
         mapId: selectedMap,
         playerName: user.username,
@@ -90,7 +90,7 @@ const CreateRoomSheet: React.FC<CreateRoomSheetProps> = ({ visible, onClose }) =
       onDismiss={handleClose}
       backdropComponent={renderBackdrop}
     >
-      <BottomSheetView className="pb-8 items-center">
+      <BottomSheetView className="pb-8 px-4">
         <View className="px-4 py-5 items-center w-full">
           <View className="w-16 h-16 rounded-full bg-gray-100 dark:bg-neutral-800 justify-center items-center">
             <Ionicons name="game-controller-outline" size={32} color={isDarkMode ? '#fff' : '#000'} />
@@ -105,56 +105,57 @@ const CreateRoomSheet: React.FC<CreateRoomSheetProps> = ({ visible, onClose }) =
           </Text>
         </View>
 
-        <ScrollView className="w-full px-4">
-          <View className="py-4">
-            <Text className="mb-2">Max Players:</Text>
-            <BottomSheetTextInput
-              placeholder="Max Players (2-10)"
-              value={maxPlayers}
-              onChangeText={setMaxPlayers}
-              keyboardType="numeric"
-              className="mb-4 p-4 border border-gray-200 dark:border-neutral-800 rounded-lg"
-            />
+        <View className="py-4">
+          <Text className="mb-2">Max Players:</Text>
+          <BottomSheetTextInput
+            placeholder="Max Players (2-10)"
+            value={maxPlayers.toString()}
+            onChangeText={(text) => setMaxPlayers(Number.parseInt(text))}
+            keyboardType="numeric"
+            className="mb-4 p-4 border border-gray-200 dark:border-neutral-800 rounded-lg"
+          />
 
-            <View className="flex-row justify-between items-center mb-4">
-              <Text>Private Room</Text>
-              <Switch value={isPrivate} onValueChange={setIsPrivate} trackColor={{ true: '#0D80F2' }} />
-            </View>
-
-            <Text className="mb-2">Map:</Text>
-            <View className="gap-2">
-              {MAPS.map((map) => (
-                <Button
-                  key={map.id}
-                  label={map.name}
-                  variant={selectedMap === map.id ? 'primary' : 'outline'}
-                  onPress={() => setSelectedMap(map.id)}
-                />
-              ))}
-            </View>
+          <View className="flex-row justify-between items-center mb-4">
+            <Text>Private Room</Text>
+            <Switch value={isPrivate} onValueChange={setIsPrivate} trackColor={{ true: '#0D80F2' }} />
           </View>
-        </ScrollView>
 
-        <View className="px-4 w-full">
-          <View className="flex-row gap-2">
-            <Button
-              label="Cancel"
-              onPress={handleClose}
-              variant="secondary"
-              size="large"
-              className="flex-1"
-              disabled={isCreating}
-            />
-            <Button
-              label="Create"
-              onPress={handleCreateRoom}
-              variant="primary"
-              size="large"
-              className="flex-1"
-              disabled={!maxPlayers}
-              loading={isCreating}
-            />
-          </View>
+          <Text className="mb-2">Map:</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {MAPS.map((map) => (
+              <TouchableOpacity
+                key={map.id}
+                onPress={() => setSelectedMap(map.id)}
+                className="items-center p-2 border-2 border-gray-200 dark:border-neutral-800 rounded-lg h-36 w-36"
+                style={{ borderColor: selectedMap === map.id ? '#0D80F2' : 'transparent' }}
+              >
+                <Image source={map.image} className="w-24 h-24 rounded-md" resizeMode="contain" />
+                <Text weight="bold" className="text-center mt-2">
+                  {map.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View className="flex-row gap-2">
+          <Button
+            label="Cancel"
+            onPress={handleClose}
+            variant="secondary"
+            size="large"
+            className="flex-1"
+            disabled={isCreating}
+          />
+          <Button
+            label="Create"
+            onPress={handleCreateRoom}
+            variant="primary"
+            size="large"
+            className="flex-1"
+            disabled={!maxPlayers}
+            loading={isCreating}
+          />
         </View>
       </BottomSheetView>
     </BottomSheetModal>

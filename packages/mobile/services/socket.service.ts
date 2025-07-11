@@ -1,6 +1,5 @@
 import type { ClientToServerEvents, ServerToClientEvents } from '@hide-and-seek/shared';
 import { io, type Socket } from 'socket.io-client';
-import { Env } from '@/constants/Env';
 import type { SocketConnectionStatus } from '@/types/socket';
 
 class SocketService {
@@ -11,9 +10,9 @@ class SocketService {
   };
   private listeners: Map<string, (status: SocketConnectionStatus) => void> = new Map();
 
-  connect(serverUrl: string = Env.WS_URL): void {
+  connect(serverUrl: string): string | null {
     if (this.socket?.connected) {
-      return;
+      return this.socket.id ?? null;
     }
 
     this.updateConnectionStatus({ isConnecting: true, isConnected: false });
@@ -49,6 +48,8 @@ class SocketService {
         isConnecting: false,
       });
     });
+
+    return this.socket?.id ?? null;
   }
 
   disconnect(): void {
@@ -63,6 +64,7 @@ class SocketService {
     if (!this.socket?.connected) {
       throw new Error('Socket not connected');
     }
+
     this.socket.emit(event, ...args);
   }
 

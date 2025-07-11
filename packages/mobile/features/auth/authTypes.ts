@@ -5,7 +5,7 @@ export type Theme = 'light' | 'dark' | 'system';
 export type User = {
   username: string;
   avatar: string;
-  socketId: string;
+  socketId?: string;
 };
 
 export interface AuthState {

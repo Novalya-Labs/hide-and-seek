@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext, useEffect } from 'react';
+import { Env } from '@/constants/Env';
 import { useAuthStore } from '@/features/auth/authStore';
 import { socketService } from '@/services/socket.service';
 
@@ -11,13 +12,16 @@ const WebSocketContext = createContext<WebSocketContextType>({
 });
 
 export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user } = useAuthStore();
+  const { user, setSocketId } = useAuthStore();
 
   useEffect(() => {
-    if (user) {
-      socketService.connect();
+    if (user && !user.socketId) {
+      const socketId = socketService.connect(Env.WS_URL);
+      if (socketId) {
+        setSocketId(socketId);
+      }
     }
-  }, [user]);
+  }, [user, setSocketId]);
 
   const payload: WebSocketContextType = {
     isConnected: !!user,
