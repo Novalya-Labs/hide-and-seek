@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   },
 
   roomInfoCard: {
-    marginHorizontal: 24,
+    marginHorizontal: 12,
     marginBottom: 24,
   },
 
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   },
 
   playersSection: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 12,
     marginBottom: 24,
   },
 

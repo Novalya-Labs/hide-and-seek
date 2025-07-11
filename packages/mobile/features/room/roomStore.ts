@@ -78,8 +78,8 @@ export const useRoomStore = create<RoomStore>()(
         leaveRoom: async (payload) => {
           try {
             set({ isLeaving: true });
-            const room = await leaveRoom(payload);
-            set({ currentRoom: room });
+            await leaveRoom(payload);
+            set({ currentRoom: null });
           } catch {
             set({ error: 'Failed to leave room' });
           } finally {

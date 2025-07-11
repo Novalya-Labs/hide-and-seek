@@ -2,6 +2,13 @@ import type { FetchAvailableRoomsPayload, RoomSummary } from '@hide-and-seek/sha
 import { socketService } from '@/services/socket.service';
 
 export const fetchAvailableRooms = async (payload: FetchAvailableRoomsPayload): Promise<RoomSummary[]> => {
-  socketService.emit('fetchAvailableRooms', payload);
-  return [];
+  return new Promise((resolve, reject) => {
+    socketService.emitWithCallback('fetchAvailableRooms', payload, (response) => {
+      if (response.success && response.data) {
+        resolve(response.data);
+      } else {
+        reject(new Error(response.error || 'Failed to fetch available rooms'));
+      }
+    });
+  });
 };

@@ -63,10 +63,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 4,
+    padding: 2,
   },
 
   currentPlayer: {
     borderColor: '#007AFF',
+    borderRadius: 10,
     borderWidth: 2,
   },
 

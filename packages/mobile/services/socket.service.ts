@@ -60,28 +60,28 @@ class SocketService {
     }
   }
 
-  emit<T extends keyof ClientToServerEvents>(event: T, ...args: Parameters<ClientToServerEvents[T]>): void {
+  emitWithCallback<K extends keyof ClientToServerEvents>(event: K, ...args: Parameters<ClientToServerEvents[K]>): void {
     if (!this.socket?.connected) {
-      throw new Error('Socket not connected');
+      const callback = args[args.length - 1] as (...args: unknown[]) => void;
+      callback({ success: false, error: 'Socket not connected' });
+      return;
     }
 
     this.socket.emit(event, ...args);
   }
 
-  on<T extends keyof ServerToClientEvents>(event: T, callback: ServerToClientEvents[T]): void {
+  get socketOn() {
     if (!this.socket) {
       throw new Error('Socket not initialized');
     }
-    // biome-ignore lint/suspicious/noExplicitAny: <Wait>
-    this.socket.on(event, callback as any);
+    return this.socket.on.bind(this.socket);
   }
 
-  off<T extends keyof ServerToClientEvents>(event: T, callback?: ServerToClientEvents[T]): void {
+  get socketOff() {
     if (!this.socket) {
-      return;
+      return () => {};
     }
-    // biome-ignore lint/suspicious/noExplicitAny: <Wait>
-    this.socket.off(event, callback as any);
+    return this.socket.off.bind(this.socket);
   }
 
   onConnectionStatusChange(id: string, callback: (status: SocketConnectionStatus) => void): void {
