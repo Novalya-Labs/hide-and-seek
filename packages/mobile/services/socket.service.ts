@@ -72,7 +72,7 @@ class SocketService {
 
   get socketOn() {
     if (!this.socket) {
-      throw new Error('Socket not initialized');
+      return () => {};
     }
     return this.socket.on.bind(this.socket);
   }

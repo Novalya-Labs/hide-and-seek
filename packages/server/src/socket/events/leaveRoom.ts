@@ -3,11 +3,11 @@ import type { Socket } from 'socket.io';
 import { logger } from '@/utils/logger';
 import { roomManager } from '../roomManager';
 
-export const handleLeaveRoom = (
+export const handleLeaveRoom = async (
   socket: Socket,
   payload: LeaveRoomPayload,
   callback: (response: SocketResponse<void>) => void,
-): void => {
+): Promise<void> => {
   try {
     logger.info(`Player attempting to leave room ${payload.roomId}`);
 
@@ -15,10 +15,23 @@ export const handleLeaveRoom = (
 
     if (room) {
       socket.leave(room.id);
-      socket.to(room.id).emit('playerLeft', room);
 
-      if (wasHost) {
-        socket.to(room.id).emit('roomUpdated', room);
+      if (wasHost && (room.status === 'hiding' || room.status === 'seeking')) {
+        socket.to(room.id).emit('error', 'Host left the game. You have been disconnected.');
+
+        const roomSockets = await socket.nsp.in(room.id).fetchSockets();
+        for (const roomSocket of roomSockets) {
+          roomSocket.leave(room.id);
+        }
+
+        logger.info(`Room ${room.id} closed due to host leaving during game`);
+      } else {
+        socket.to(room.id).emit('playerLeft', room);
+
+        if (wasHost && room.players.length > 0) {
+          socket.to(room.id).emit('roomUpdated', room);
+          logger.info(`Host transferred in room ${room.id} due to intentional leave`);
+        }
       }
     }
 

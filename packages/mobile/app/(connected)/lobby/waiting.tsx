@@ -58,7 +58,7 @@ export default function WaitingRoomScreen() {
     setIsStarting(true);
     try {
       await startGame({ roomId: currentRoom.id });
-      router.push('/game');
+      router.replace('/game');
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Failed to start game');
     } finally {
@@ -288,7 +288,9 @@ const styles = StyleSheet.create({
   },
 
   hostCard: {
-    marginHorizontal: 24,
+    padding: 12,
+    marginHorizontal: 12,
+    borderRadius: 10,
     marginBottom: 24,
     backgroundColor: '#E3F2FD',
   },

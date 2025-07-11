@@ -34,7 +34,16 @@ export function setupSocketHandlers(io: SocketServer) {
       logger.info(`Client disconnected: ${socket.id} from ${clientIP}, reason: ${reason}`);
 
       try {
-        roomManager.leaveRoom(socket.id);
+        const { room, wasHost } = roomManager.leaveRoom(socket.id);
+
+        if (room) {
+          socket.to(room.id).emit('playerLeft', room);
+
+          if (wasHost && room.players.length > 0) {
+            socket.to(room.id).emit('roomUpdated', room);
+            logger.info(`Host transferred in room ${room.id} due to disconnection`);
+          }
+        }
       } catch (error) {
         logger.error(`Error cleaning up disconnected player ${socket.id}:`, error);
       }
