@@ -1,75 +1,85 @@
-import type { SeekerPosition } from '@hide-and-seek/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import { PanGestureHandler, type PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { PlayerAvatar } from '@/components/ui';
 import { useGameStore } from '@/features/game/gameStore';
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 interface SeekerCursorProps {
   seekerAvatar: string;
   mapWidth: number;
   mapHeight: number;
   isCurrentSeeker: boolean;
+  containerWidth: number;
+  containerHeight: number;
 }
 
-export const SeekerCursor: React.FC<SeekerCursorProps> = ({ seekerAvatar, mapWidth, mapHeight, isCurrentSeeker }) => {
+export const SeekerCursor: React.FC<SeekerCursorProps> = ({
+  seekerAvatar,
+  mapWidth,
+  mapHeight,
+  isCurrentSeeker,
+  containerWidth,
+  containerHeight,
+}) => {
   const { currentSeekerPosition, moveSeekerTo } = useGameStore();
   const [isDragging, setIsDragging] = useState(false);
 
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
+  const cursorX = useRef(new Animated.Value(0)).current;
+  const cursorY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
 
   const lastMoveTime = useRef(0);
   const MOVE_THROTTLE = 50;
 
   const updateSeekerPosition = useCallback(
-    (x: number, y: number) => {
+    (screenX: number, screenY: number) => {
       const now = Date.now();
       if (now - lastMoveTime.current < MOVE_THROTTLE) return;
 
       lastMoveTime.current = now;
 
-      const normalizedX = Math.max(0, Math.min(mapWidth, x));
-      const normalizedY = Math.max(0, Math.min(mapHeight, y));
+      // Convert screen coordinates to map coordinates
+      const mapX = (screenX / containerWidth) * mapWidth;
+      const mapY = (screenY / containerHeight) * mapHeight;
+
+      const normalizedX = Math.max(0, Math.min(mapWidth, mapX));
+      const normalizedY = Math.max(0, Math.min(mapHeight, mapY));
 
       moveSeekerTo({
         x: normalizedX,
         y: normalizedY,
       });
     },
-    [mapWidth, mapHeight, moveSeekerTo],
+    [mapWidth, mapHeight, containerWidth, containerHeight, moveSeekerTo],
   );
 
   const onPanGestureEvent = useCallback(
     (event: PanGestureHandlerGestureEvent) => {
       if (!isCurrentSeeker) return;
 
-      const { translationX, translationY } = event.nativeEvent;
+      const { absoluteX, absoluteY } = event.nativeEvent;
 
-      const newX = translationX;
-      const newY = translationY;
+      // Update cursor position immediately
+      cursorX.setValue(absoluteX);
+      cursorY.setValue(absoluteY);
 
-      translateX.setValue(newX);
-      translateY.setValue(newY);
-
-      const screenX = (newX / (screenWidth * 0.9)) * mapWidth;
-      const screenY = (newY / (screenHeight * 0.4)) * mapHeight;
-
-      updateSeekerPosition(screenX, screenY);
+      // Update seeker position
+      updateSeekerPosition(absoluteX, absoluteY);
     },
-    [isCurrentSeeker, updateSeekerPosition, mapWidth, mapHeight, translateX, translateY],
+    [isCurrentSeeker, updateSeekerPosition, cursorX, cursorY],
   );
 
   const onPanHandlerStateChange = useCallback(
     (event: any) => {
-      const { state } = event.nativeEvent;
+      const { state, absoluteX, absoluteY } = event.nativeEvent;
 
       if (state === 2) {
-        // BEGAN
+        // BEGAN - teleport cursor to touch position
         setIsDragging(true);
+        cursorX.setValue(absoluteX);
+        cursorY.setValue(absoluteY);
+        updateSeekerPosition(absoluteX, absoluteY);
+
         Animated.spring(scale, {
           toValue: 1.2,
           useNativeDriver: true,
@@ -83,41 +93,41 @@ export const SeekerCursor: React.FC<SeekerCursorProps> = ({ seekerAvatar, mapWid
         }).start();
       }
     },
-    [scale],
+    [scale, cursorX, cursorY, updateSeekerPosition],
   );
 
+  // Update cursor position when seeker position changes from server
   useEffect(() => {
-    if (currentSeekerPosition && !isDragging) {
-      const screenX = (currentSeekerPosition.x / mapWidth) * (screenWidth * 0.9);
-      const screenY = (currentSeekerPosition.y / mapHeight) * (screenHeight * 0.4);
+    const position = currentSeekerPosition || { x: 0, y: 0 };
+    if (!isDragging) {
+      const screenX = (position.x / mapWidth) * containerWidth;
+      const screenY = (position.y / mapHeight) * containerHeight;
 
-      Animated.timing(translateX, {
+      Animated.timing(cursorX, {
         toValue: screenX,
         duration: 100,
         useNativeDriver: true,
       }).start();
 
-      Animated.timing(translateY, {
+      Animated.timing(cursorY, {
         toValue: screenY,
         duration: 100,
         useNativeDriver: true,
       }).start();
     }
-  }, [currentSeekerPosition, isDragging, translateX, translateY, mapWidth, mapHeight]);
-
-  if (!currentSeekerPosition) return null;
+  }, [currentSeekerPosition, isDragging, cursorX, cursorY, mapWidth, mapHeight, containerWidth, containerHeight]);
 
   const CursorComponent = (
     <Animated.View
       style={[
         styles.cursor,
         {
-          transform: [{ translateX }, { translateY }, { scale }],
+          transform: [{ translateX: cursorX }, { translateY: cursorY }, { scale }],
         },
       ]}
     >
       <View style={styles.avatarContainer}>
-        <PlayerAvatar avatar={seekerAvatar} size={32} />
+        <PlayerAvatar avatar={seekerAvatar} size="small" />
       </View>
       {isDragging && <View style={styles.shadow} />}
     </Animated.View>
@@ -125,13 +135,15 @@ export const SeekerCursor: React.FC<SeekerCursorProps> = ({ seekerAvatar, mapWid
 
   if (isCurrentSeeker) {
     return (
-      <PanGestureHandler
-        onGestureEvent={onPanGestureEvent}
-        onHandlerStateChange={onPanHandlerStateChange}
-        enableTrackpadTwoFingerGesture={false}
-      >
-        {CursorComponent}
-      </PanGestureHandler>
+      <View style={styles.mapTouchArea}>
+        <PanGestureHandler
+          onGestureEvent={onPanGestureEvent}
+          onHandlerStateChange={onPanHandlerStateChange}
+          enableTrackpadTwoFingerGesture={false}
+        >
+          <Animated.View style={styles.fullMapArea}>{CursorComponent}</Animated.View>
+        </PanGestureHandler>
+      </View>
     );
   }
 
@@ -139,6 +151,21 @@ export const SeekerCursor: React.FC<SeekerCursorProps> = ({ seekerAvatar, mapWid
 };
 
 const styles = StyleSheet.create({
+  mapTouchArea: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 5,
+  },
+
+  fullMapArea: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+
   cursor: {
     position: 'absolute',
     zIndex: 10,

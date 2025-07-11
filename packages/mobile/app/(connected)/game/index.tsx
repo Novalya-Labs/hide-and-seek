@@ -264,7 +264,7 @@ export default function GameScreen() {
     return (
       <View style={styles.gameContainer}>
         <View style={styles.mapContainer}>
-          <Image source={getMapImageSource(currentRoom.map.name)} style={styles.mapImage} resizeMode="contain" />
+          <Image source={getMapImageSource(currentRoom.map.id)} style={styles.mapImage} resizeMode="contain" />
 
           {currentRoom.map.hidingSpots.map(renderHidingSpot)}
 
@@ -274,6 +274,8 @@ export default function GameScreen() {
               mapWidth={800}
               mapHeight={600}
               isCurrentSeeker={isCurrentPlayerSeeker()}
+              containerWidth={screenWidth * 0.9}
+              containerHeight={screenHeight * 0.4}
             />
           )}
         </View>
@@ -325,11 +327,30 @@ export default function GameScreen() {
           <Text style={styles.gameInfoValue}>{gameState.currentRound}</Text>
         </View>
         <View style={styles.gameInfoRow}>
+          <Text style={styles.gameInfoLabel}>Phase:</Text>
+          <Text
+            style={[
+              styles.gameInfoValue,
+              {
+                color: gameState.phase === 'hiding' ? '#FF6B35' : gameState.phase === 'seeking' ? '#DC3545' : '#6C757D',
+              },
+            ]}
+          >
+            {gameState.phase.charAt(0).toUpperCase() + gameState.phase.slice(1)}
+          </Text>
+        </View>
+        <View style={styles.gameInfoRow}>
           <Text style={styles.gameInfoLabel}>Role:</Text>
           <Text style={[styles.gameInfoValue, { color: isCurrentPlayerSeeker() ? '#DC3545' : '#28A745' }]}>
             {isCurrentPlayerSeeker() ? 'Seeker' : 'Hider'}
           </Text>
         </View>
+        {gameState.seeker && (
+          <View style={styles.gameInfoRow}>
+            <Text style={styles.gameInfoLabel}>Seeker:</Text>
+            <Text style={[styles.gameInfoValue, { color: '#DC3545' }]}>{getSeekerUsername() || 'Unknown'}</Text>
+          </View>
+        )}
         {gameState.phase === 'hiding' && currentTimeLeft > 0 && (
           <View style={styles.gameInfoRow}>
             <Text style={styles.gameInfoLabel}>Time Left:</Text>

@@ -15,7 +15,24 @@ export const useGameEvents = () => {
 
     const handleGameStateUpdated = (newGameState: GameState) => {
       console.log('Game state updated event received:', newGameState);
-      useGameStore.setState({ gameState: newGameState });
+
+      // Ensure seeker position is initialized
+      if (newGameState.seekerPosition === null) {
+        newGameState.seekerPosition = { x: 0, y: 0 };
+      }
+
+      // Update seeker actions based on checked spots
+      const seekerActions: Record<string, { found: boolean }> = {};
+      newGameState.checkedSpots.forEach((spotId) => {
+        const wasPlayerFound = Object.values(newGameState.hiddenPlayers).includes(spotId);
+        seekerActions[spotId] = { found: wasPlayerFound };
+      });
+
+      useGameStore.setState({
+        gameState: newGameState,
+        currentSeekerPosition: newGameState.seekerPosition,
+        seekerActions,
+      });
     };
 
     const handleSeekerMovement = (position: SeekerPosition) => {

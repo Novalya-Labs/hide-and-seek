@@ -226,6 +226,7 @@ class RoomManager {
     gameState.phase = 'hiding';
     gameState.timeLeft = 30000;
     gameState.phaseStartTime = Date.now();
+    gameState.seekerPosition = { x: 0, y: 0 };
 
     this.socketService?.emitGameStateUpdate(roomId, gameState);
 
@@ -266,6 +267,7 @@ class RoomManager {
     gameState.seekerPosition = { x: payload.x, y: payload.y };
 
     this.socketService?.emitSeekerMovement(roomId, gameState.seekerPosition);
+    this.socketService?.emitGameStateUpdate(roomId, gameState);
 
     this.checkCollisionWithHidingSpots(roomId, gameState.seekerPosition);
   }

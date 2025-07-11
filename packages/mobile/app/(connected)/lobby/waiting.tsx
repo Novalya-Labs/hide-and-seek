@@ -24,6 +24,16 @@ export default function WaitingRoomScreen() {
     }
   }, [currentRoom, router]);
 
+  useEffect(() => {
+    if (!currentRoom || !user?.socketId) return;
+
+    const isHost = currentRoom.players.find((p) => p.socketId === user.socketId)?.isHost ?? false;
+
+    if (!isHost && currentRoom.status !== 'waiting') {
+      router.replace('/game');
+    }
+  }, [currentRoom, user?.socketId, router]);
+
   const handleLeaveRoom = async () => {
     if (!currentRoom) return;
 

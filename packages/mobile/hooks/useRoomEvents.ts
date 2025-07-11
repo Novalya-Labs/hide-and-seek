@@ -1,10 +1,12 @@
 import type { Room } from '@hide-and-seek/shared';
 import { useEffect } from 'react';
+import { useGameStore } from '@/features/game/gameStore';
 import { useRoomStore } from '@/features/room/roomStore';
 import { socketService } from '@/services/socket.service';
 
 export const useRoomEvents = () => {
   const { currentRoom } = useRoomStore();
+  const { reset: resetGameStore } = useGameStore();
 
   useEffect(() => {
     if (!currentRoom) return;
@@ -27,6 +29,7 @@ export const useRoomEvents = () => {
     const handleGameStarted = (room: Room) => {
       console.log('Game started event received:', room);
       useRoomStore.setState({ currentRoom: room });
+      resetGameStore();
     };
 
     const handleError = (error: string) => {
@@ -47,7 +50,7 @@ export const useRoomEvents = () => {
       socketService.socketOff('gameStarted', handleGameStarted);
       socketService.socketOff('error', handleError);
     };
-  }, [currentRoom]);
+  }, [currentRoom, resetGameStore]);
 
   return {
     isListening: !!currentRoom,
