@@ -2,7 +2,7 @@ import type { HidingSpot } from '@hide-and-seek/shared';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Dimensions, Image, SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { PlayerCard } from '@/components/game';
+import { PlayerCard, SeekerCursor } from '@/components/game';
 import { Button, LoadingSpinner, Text } from '@/components/ui';
 import { useAuthStore } from '@/features/auth/authStore';
 import { useGameStore } from '@/features/game/gameStore';
@@ -15,9 +15,8 @@ export default function GameScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { currentRoom, leaveRoom } = useRoomStore();
-  const { selectHidingSpot, gameState, error, clearError, seekerActions } = useGameStore();
+  const { selectHidingSpot, gameState, error, clearError, seekerActions, getCurrentTimeLeft } = useGameStore();
 
-  const [selectedSpot, setSelectedSpot] = useState<string | null>(null);
   const [isPerformingAction, setIsPerformingAction] = useState(false);
   const [currentTimeLeft, setCurrentTimeLeft] = useState(0);
 
@@ -28,18 +27,34 @@ export default function GameScreen() {
     return seekerPlayer ? seekerPlayer.username : null;
   }, [gameState.seeker, currentRoom]);
 
-  const isCurrentPlayerSeeker = useCallback((): boolean => {
-    const seekerUsername = getSeekerUsername();
-    const isSeeker = seekerUsername === user?.username;
+  const getSeekerAvatar = useCallback((): string | null => {
+    if (!gameState.seeker || !currentRoom) return null;
 
-    return isSeeker;
-  }, [user?.username, getSeekerUsername]);
+    const seekerPlayer = currentRoom.players.find((p) => p.socketId === gameState.seeker);
+    return seekerPlayer ? seekerPlayer.avatar : null;
+  }, [gameState.seeker, currentRoom]);
+
+  const isCurrentPlayerSeeker = useCallback((): boolean => {
+    if (!user?.socketId) return false;
+    return gameState.seeker === user.socketId;
+  }, [user?.socketId, gameState.seeker]);
+
+  const getCurrentPlayerHidingSpot = useCallback((): string | null => {
+    if (!user?.socketId) return null;
+    return gameState.hiddenPlayers[user.socketId] || null;
+  }, [user?.socketId, gameState.hiddenPlayers]);
+
+  const isSpotChecked = useCallback(
+    (spotId: string): boolean => {
+      return gameState.seekerAttempts > 0 && seekerActions[spotId] !== undefined;
+    },
+    [gameState.seekerAttempts, seekerActions],
+  );
 
   useEffect(() => {
     if (gameState.phase === 'hiding' && gameState.timeLeft > 0) {
       const interval = setInterval(() => {
-        const elapsed = Date.now() - (gameState.phaseStartTime || 0);
-        const remaining = Math.max(0, gameState.timeLeft - elapsed);
+        const remaining = getCurrentTimeLeft();
         setCurrentTimeLeft(remaining);
 
         if (remaining <= 0) {
@@ -50,7 +65,7 @@ export default function GameScreen() {
       return () => clearInterval(interval);
     }
     setCurrentTimeLeft(0);
-  }, [gameState.phase, gameState.timeLeft, gameState.phaseStartTime]);
+  }, [gameState.phase, gameState.timeLeft, getCurrentTimeLeft]);
 
   const handleLeaveGame = async () => {
     if (!currentRoom) return;
@@ -82,41 +97,40 @@ export default function GameScreen() {
       setIsPerformingAction(true);
       try {
         await selectHidingSpot({ spotId });
-        setSelectedSpot(spotId);
       } catch (error) {
         Alert.alert('Error', error instanceof Error ? error.message : 'Failed to select hiding spot');
       } finally {
         setIsPerformingAction(false);
       }
     }
-
-    if (gamePhase === 'seeking' && isSeeker) {
-      // TODO: Implement seeking logic
-    }
   };
 
   const renderHidingSpot = (spot: HidingSpot) => {
-    const isSelected = selectedSpot === spot.id;
     const gamePhase = gameState.phase;
     const isSeeker = isCurrentPlayerSeeker();
-
-    const isOccupied = isSeeker ? false : spot.isOccupied;
-    const hasBeenChecked = seekerActions[spot.id];
+    const currentPlayerSpot = getCurrentPlayerHidingSpot();
+    const isMySpot = currentPlayerSpot === spot.id;
+    const isChecked = isSpotChecked(spot.id);
 
     let spotColor = '#007AFF';
     let spotOpacity = 0.7;
 
-    if (isOccupied) {
-      spotColor = '#DC3545';
-    } else if (isSelected) {
-      spotColor = '#28A745';
-    } else if (hasBeenChecked) {
-      spotColor = seekerActions[spot.id].found ? '#FF6B35' : '#6C757D';
-      spotOpacity = 0.4;
+    if (gamePhase === 'hiding') {
+      if (spot.isOccupied && !isSeeker) {
+        spotColor = isMySpot ? '#28A745' : '#DC3545';
+      } else if (isMySpot) {
+        spotColor = '#28A745';
+      }
+    } else if (gamePhase === 'seeking') {
+      if (isChecked) {
+        spotColor = '#DC3545';
+        spotOpacity = 0.3;
+      } else {
+        spotColor = '#007AFF';
+      }
     }
 
-    const canInteract =
-      (gamePhase === 'hiding' && !isSeeker && !isOccupied) || (gamePhase === 'seeking' && isSeeker && !hasBeenChecked);
+    const canInteract = gamePhase === 'hiding' && !isSeeker && (!spot.isOccupied || isMySpot);
 
     return (
       <TouchableOpacity
@@ -128,18 +142,21 @@ export default function GameScreen() {
             top: (spot.y / 600) * screenHeight * 0.4,
             width: (spot.width / 800) * screenWidth * 0.9,
             height: (spot.height / 600) * screenHeight * 0.4,
-            backgroundColor: canInteract ? spotColor : '#6C757D',
-            opacity: canInteract ? spotOpacity : 0.3,
+            backgroundColor: spotColor,
+            opacity: spotOpacity,
           },
         ]}
         onPress={() => handleSpotPress(spot.id)}
         disabled={!canInteract || isPerformingAction}
       >
         <Text style={styles.spotText}>{spot.name}</Text>
-        {hasBeenChecked && (
-          <Text style={[styles.spotText, { fontSize: 10, marginTop: 2 }]}>
-            {seekerActions[spot.id].found ? '✓ Found' : '✗ Empty'}
-          </Text>
+        {isMySpot && gamePhase === 'hiding' && (
+          <Text style={[styles.spotText, { fontSize: 10, marginTop: 2 }]}>✓ Selected</Text>
+        )}
+        {isChecked && gamePhase === 'seeking' && (
+          <View style={styles.checkedIndicator}>
+            <Text style={[styles.spotText, { fontSize: 16, color: '#DC3545' }]}>✗</Text>
+          </View>
         )}
       </TouchableOpacity>
     );
@@ -173,10 +190,15 @@ export default function GameScreen() {
     const timeLeft = currentTimeLeft;
     const attempts = gameState.seekerAttempts;
     const maxAttempts = gameState.maxAttempts;
+    const hiddenCount = Object.keys(gameState.hiddenPlayers).length;
+    const totalHiders = currentRoom.players.filter((p) => p.isAlive && p.socketId !== gameState.seeker).length;
 
     switch (phase) {
       case 'hiding':
-        return isSeeker ? 'Others are selecting hiding spots' : `${Math.ceil(timeLeft / 1000)}s remaining`;
+        if (isSeeker) {
+          return `${hiddenCount}/${totalHiders} players hidden`;
+        }
+        return `${Math.ceil(timeLeft / 1000)}s remaining`;
       case 'seeking':
         return isSeeker ? `${maxAttempts - attempts} attempts left` : 'Seeker is looking for you';
       case 'results':
@@ -194,7 +216,6 @@ export default function GameScreen() {
     const phase = gameState.phase;
 
     if (phase === 'results' || phase === 'ended') {
-      // Sort players: winner first, then others
       const sortedPlayers = [...currentRoom.players].sort((a, b) => {
         const isAWinner = gameState.winner?.username === a.username;
         const isBWinner = gameState.winner?.username === b.username;
@@ -202,7 +223,6 @@ export default function GameScreen() {
         if (isAWinner && !isBWinner) return -1;
         if (!isAWinner && isBWinner) return 1;
 
-        // If no clear winner, put alive players first
         if (a.isAlive && !b.isAlive) return -1;
         if (!a.isAlive && b.isAlive) return 1;
 
@@ -247,6 +267,15 @@ export default function GameScreen() {
           <Image source={getMapImageSource(currentRoom.map.name)} style={styles.mapImage} resizeMode="contain" />
 
           {currentRoom.map.hidingSpots.map(renderHidingSpot)}
+
+          {phase === 'seeking' && getSeekerAvatar() && (
+            <SeekerCursor
+              seekerAvatar={getSeekerAvatar()!}
+              mapWidth={800}
+              mapHeight={600}
+              isCurrentSeeker={isCurrentPlayerSeeker()}
+            />
+          )}
         </View>
 
         <View style={styles.playersContainer}>
@@ -305,6 +334,14 @@ export default function GameScreen() {
           <View style={styles.gameInfoRow}>
             <Text style={styles.gameInfoLabel}>Time Left:</Text>
             <Text style={[styles.gameInfoValue, { color: '#FF6B35' }]}>{Math.ceil(currentTimeLeft / 1000)}s</Text>
+          </View>
+        )}
+        {gameState.phase === 'seeking' && (
+          <View style={styles.gameInfoRow}>
+            <Text style={styles.gameInfoLabel}>Attempts:</Text>
+            <Text style={[styles.gameInfoValue, { color: '#FF6B35' }]}>
+              {gameState.seekerAttempts}/{gameState.maxAttempts}
+            </Text>
           </View>
         )}
       </View>
@@ -393,6 +430,18 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
 
+  checkedIndicator: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   playersContainer: {
     backgroundColor: '#FFFFFF',
     padding: 16,
@@ -447,29 +496,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     flex: 1,
     marginRight: 12,
-  },
-
-  debugContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    padding: 10,
-    zIndex: 10,
-  },
-
-  debugTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-
-  debugText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    marginBottom: 2,
   },
 
   gameInfoCard: {

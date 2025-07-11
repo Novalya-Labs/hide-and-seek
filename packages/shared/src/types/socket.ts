@@ -1,4 +1,4 @@
-import type { SelectHidingSpotPayload } from './game';
+import type { GameState, SeekerPosition, SelectHidingSpotPayload, UpdateSeekerPositionPayload } from './game';
 import type {
   CreateRoomPayload,
   FetchAvailableRoomsPayload,
@@ -21,6 +21,9 @@ export type ServerToClientEvents = {
   playerJoined: (room: Room) => void;
   playerLeft: (room: Room) => void;
   gameStarted: (room: Room) => void;
+  gameStateUpdated: (gameState: GameState) => void;
+  seekerMovement: (position: SeekerPosition) => void;
+  playerFound: (data: { username: string }) => void;
   error: (error: string) => void;
 };
 
@@ -35,4 +38,8 @@ export type ClientToServerEvents = {
   leaveRoom: (payload: LeaveRoomPayload, callback: (response: SocketResponse<void>) => void) => void;
   startGame: (payload: StartGamePayload, callback: (response: SocketResponse<Room>) => void) => void;
   selectHidingSpot: (payload: SelectHidingSpotPayload, callback: (response: SocketResponse<void>) => void) => void;
+  updateSeekerPosition: (
+    payload: UpdateSeekerPositionPayload,
+    callback: (response: SocketResponse<void>) => void,
+  ) => void;
 };

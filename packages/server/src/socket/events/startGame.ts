@@ -23,6 +23,11 @@ export const handleStartGame = (
 
     socket.to(room.id).emit('gameStarted', room);
 
+    const gameState = roomManager.getGameState(room.id);
+    if (gameState) {
+      socket.nsp.to(room.id).emit('gameStateUpdated', gameState);
+    }
+
     callback({
       success: true,
       data: room,

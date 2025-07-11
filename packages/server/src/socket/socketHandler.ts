@@ -8,7 +8,9 @@ import {
   handleJoinRoom,
   handleJoinRoomWithCode,
   handleLeaveRoom,
+  handleSelectHidingSpot,
   handleStartGame,
+  handleUpdateSeekerPosition,
 } from './events';
 import { roomManager } from './roomManager';
 
@@ -17,6 +19,8 @@ type Socket = ServerSocket<ClientToServerEvents, ServerToClientEvents, InterServ
 
 export function setupSocketHandlers(io: SocketServer) {
   logger.info('Setting up Socket.IO handlers');
+
+  roomManager.setSocketServer(io);
 
   io.on('connection', (socket: Socket) => {
     const clientIP = socket.handshake.address;
@@ -28,6 +32,8 @@ export function setupSocketHandlers(io: SocketServer) {
     socket.on('joinRoomWithCode', handleJoinRoomWithCode.bind(null, socket));
     socket.on('leaveRoom', handleLeaveRoom.bind(null, socket));
     socket.on('startGame', handleStartGame.bind(null, socket));
+    socket.on('selectHidingSpot', handleSelectHidingSpot.bind(null, socket));
+    socket.on('updateSeekerPosition', handleUpdateSeekerPosition.bind(null, socket));
     socket.on('fetchAvailableRooms', handleFetchAvailableRooms.bind(null, socket));
 
     socket.on('disconnect', (reason) => {
