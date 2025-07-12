@@ -80,8 +80,8 @@ export const GamePhaseHeader: React.FC<GamePhaseHeaderProps> = ({
 
 const styles = StyleSheet.create({
   phaseHeader: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderBottomWidth: 1,
@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 25,
-    marginBottom: 10,
   },
 
   phaseIcon: {

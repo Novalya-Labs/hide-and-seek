@@ -40,7 +40,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     <View style={cardStyle}>
       <View style={styles.content}>
         <View style={styles.avatarContainer}>
-          <PlayerAvatar avatar={player.avatar} size="medium" />
+          <PlayerAvatar avatar={player.avatar} size="small" />
           {player.isHost && (
             <View style={styles.hostBadge}>
               <Text style={styles.hostText}>HOST</Text>
@@ -62,7 +62,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 4,
     padding: 2,
   },
 
@@ -83,13 +82,13 @@ const styles = StyleSheet.create({
 
   avatarContainer: {
     position: 'relative',
-    marginRight: 12,
+    marginRight: 6,
   },
 
   hostBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -2,
+    right: -2,
     backgroundColor: '#FF6B35',
     borderRadius: 8,
     paddingHorizontal: 4,
@@ -107,9 +106,8 @@ const styles = StyleSheet.create({
   },
 
   name: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 4,
   },
 
   eliminatedText: {
@@ -125,11 +123,11 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 6,
+    marginRight: 4,
   },
 
   status: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '500',
   },
 });

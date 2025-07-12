@@ -34,14 +34,14 @@ export const GameInfoCard: React.FC<GameInfoCardProps> = ({ gameState, getSeeker
 
 const styles = StyleSheet.create({
   gameInfoCard: {
-    padding: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
   },
 
   gameInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
   },
 
   gameInfoLabel: {

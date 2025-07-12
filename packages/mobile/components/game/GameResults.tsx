@@ -71,7 +71,7 @@ export const GameResults: React.FC<GameResultsProps> = ({ currentRoom, gameState
 const styles = StyleSheet.create({
   resultsContainer: {
     flex: 1,
-    padding: 16,
+    padding: 8,
   },
 
   resultsTitle: {

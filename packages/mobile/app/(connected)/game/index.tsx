@@ -232,7 +232,6 @@ export default function GameScreen() {
         </View>
 
         <View style={styles.playersContainer}>
-          <Text style={styles.playersTitle}>Players</Text>
           <View style={styles.playersGrid}>
             {currentRoom.players.map((player) => (
               <PlayerCard
@@ -267,6 +266,7 @@ export default function GameScreen() {
 
         <Button label="Leave" onPress={handleLeaveGame} variant="destructive" size="small" />
       </View>
+      <GameInfoCard gameState={gameState} getSeekerUsername={getSeekerUsername} />
 
       <GamePhaseHeader
         currentRoom={currentRoom}
@@ -276,8 +276,6 @@ export default function GameScreen() {
         phaseAnim={phaseAnim}
         roleAnim={roleAnim}
       />
-
-      <GameInfoCard gameState={gameState} getSeekerUsername={getSeekerUsername} />
 
       <View style={styles.contentContainer}>{renderGamePhase()}</View>
 
@@ -302,7 +300,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E7',
@@ -346,16 +345,9 @@ const styles = StyleSheet.create({
 
   playersContainer: {
     backgroundColor: '#FFFFFF',
-    padding: 16,
+    padding: 6,
     borderTopWidth: 1,
     borderTopColor: '#E5E5E7',
-  },
-
-  playersTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#212529',
-    marginBottom: 8,
   },
 
   playersGrid: {
