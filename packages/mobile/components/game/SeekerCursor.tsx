@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { StyleSheet, View } from 'react-native';
+import {
+  PanGestureHandler,
+  type PanGestureHandlerGestureEvent,
+  type PanGestureHandlerStateChangeEvent,
+  State,
+} from 'react-native-gesture-handler';
 import { PlayerAvatar } from '@/components/ui';
 import { useGameStore } from '@/features/game/gameStore';
 
@@ -22,113 +27,116 @@ export const SeekerCursor: React.FC<SeekerCursorProps> = ({
   containerHeight,
 }) => {
   const { currentSeekerPosition, moveSeekerTo } = useGameStore();
-  const [isDragging, setIsDragging] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
 
-  const cursorX = useRef(new Animated.Value(0)).current;
-  const cursorY = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(1)).current;
+  // Refs for immediate visual updates
+  const cursorRef = useRef<View>(null);
+  const lastSentTime = useRef(0);
+  const THROTTLE_MS = 50; // Limite à 20 FPS pour le réseau
 
-  const lastMoveTime = useRef(0);
-  const MOVE_THROTTLE = 50;
+  const sendPositionToServer = useCallback(
+    async (screenX: number, screenY: number) => {
+      try {
+        if (containerWidth <= 0 || containerHeight <= 0) return;
 
-  const updateSeekerPosition = useCallback(
-    (screenX: number, screenY: number) => {
-      const now = Date.now();
-      if (now - lastMoveTime.current < MOVE_THROTTLE) return;
+        const mapX = (screenX / containerWidth) * mapWidth;
+        const mapY = (screenY / containerHeight) * mapHeight;
+        const normalizedX = Math.max(0, Math.min(mapWidth, mapX));
+        const normalizedY = Math.max(0, Math.min(mapHeight, mapY));
 
-      lastMoveTime.current = now;
-
-      // Convert screen coordinates to map coordinates
-      const mapX = (screenX / containerWidth) * mapWidth;
-      const mapY = (screenY / containerHeight) * mapHeight;
-
-      const normalizedX = Math.max(0, Math.min(mapWidth, mapX));
-      const normalizedY = Math.max(0, Math.min(mapHeight, mapY));
-
-      moveSeekerTo({
-        x: normalizedX,
-        y: normalizedY,
-      });
+        await moveSeekerTo({ x: normalizedX, y: normalizedY });
+      } catch (error) {
+        console.error('Error sending position:', error);
+      }
     },
-    [mapWidth, mapHeight, containerWidth, containerHeight, moveSeekerTo],
+    [containerWidth, containerHeight, mapWidth, mapHeight, moveSeekerTo],
   );
 
-  const panGesture = useCallback(
-    () =>
-      Gesture.Pan()
-        .onBegin((event) => {
-          if (!isCurrentSeeker) return;
-
-          setIsDragging(true);
-          cursorX.setValue(event.x);
-          cursorY.setValue(event.y);
-          updateSeekerPosition(event.x, event.y);
-
-          Animated.spring(scale, {
-            toValue: 1.2,
-            useNativeDriver: true,
-          }).start();
-        })
-        .onUpdate((event) => {
-          if (!isCurrentSeeker) return;
-
-          cursorX.setValue(event.x);
-          cursorY.setValue(event.y);
-          updateSeekerPosition(event.x, event.y);
-        })
-        .onEnd(() => {
-          setIsDragging(false);
-          Animated.spring(scale, {
-            toValue: 1,
-            useNativeDriver: true,
-          }).start();
-        }),
-    [isCurrentSeeker, cursorX, cursorY, updateSeekerPosition, scale],
-  )();
-
-  // Update cursor position when seeker position changes from server
-  useEffect(() => {
-    const position = currentSeekerPosition || { x: 0, y: 0 };
-    if (!isDragging) {
-      const screenX = (position.x / mapWidth) * containerWidth;
-      const screenY = (position.y / mapHeight) * containerHeight;
-
-      Animated.timing(cursorX, {
-        toValue: screenX,
-        duration: 100,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.timing(cursorY, {
-        toValue: screenY,
-        duration: 100,
-        useNativeDriver: true,
-      }).start();
+  const updateVisualPosition = useCallback((x: number, y: number) => {
+    // Mise à jour visuelle immédiate sans setState
+    if (cursorRef.current) {
+      cursorRef.current.setNativeProps({
+        style: {
+          left: x - 20,
+          top: y - 20,
+        },
+      });
     }
-  }, [currentSeekerPosition, isDragging, cursorX, cursorY, mapWidth, mapHeight, containerWidth, containerHeight]);
+  }, []);
+
+  const handleMovement = useCallback(
+    (x: number, y: number) => {
+      if (!isCurrentSeeker) return;
+
+      // 1. Mise à jour visuelle immédiate (fluide)
+      updateVisualPosition(x, y);
+
+      // 2. Envoi réseau throttlé (performance)
+      const now = Date.now();
+      if (now - lastSentTime.current >= THROTTLE_MS) {
+        lastSentTime.current = now;
+        sendPositionToServer(x, y);
+      }
+    },
+    [isCurrentSeeker, updateVisualPosition, sendPositionToServer],
+  );
+
+  const onGestureEvent = useCallback(
+    (event: PanGestureHandlerGestureEvent) => {
+      const { x, y } = event.nativeEvent;
+      handleMovement(x, y);
+    },
+    [handleMovement],
+  );
+
+  const onHandlerStateChange = useCallback(
+    (event: PanGestureHandlerStateChangeEvent) => {
+      const { state, x, y } = event.nativeEvent;
+
+      if (state === State.BEGAN || state === State.ACTIVE) {
+        handleMovement(x, y);
+      }
+    },
+    [handleMovement],
+  );
+
+  // Update cursor position from server (other players)
+  useEffect(() => {
+    if (currentSeekerPosition && !isCurrentSeeker) {
+      const screenX = (currentSeekerPosition.x / mapWidth) * containerWidth;
+      const screenY = (currentSeekerPosition.y / mapHeight) * containerHeight;
+      setCursorPosition({ x: screenX, y: screenY });
+    }
+  }, [currentSeekerPosition, isCurrentSeeker, mapWidth, mapHeight, containerWidth, containerHeight]);
 
   const CursorComponent = (
-    <Animated.View
+    <View
+      ref={cursorRef}
       style={[
         styles.cursor,
         {
-          transform: [{ translateX: cursorX }, { translateY: cursorY }, { scale }],
+          left: cursorPosition.x - 20,
+          top: cursorPosition.y - 20,
         },
       ]}
     >
       <View style={styles.avatarContainer}>
         <PlayerAvatar avatar={seekerAvatar} size="small" />
       </View>
-      {isDragging && <View style={styles.shadow} />}
-    </Animated.View>
+    </View>
   );
 
   if (isCurrentSeeker) {
     return (
       <View style={styles.mapTouchArea}>
-        <GestureDetector gesture={panGesture}>
-          <Animated.View style={styles.fullMapArea}>{CursorComponent}</Animated.View>
-        </GestureDetector>
+        <PanGestureHandler
+          onGestureEvent={onGestureEvent}
+          onHandlerStateChange={onHandlerStateChange}
+          shouldCancelWhenOutside={false}
+          minDist={0}
+        >
+          <View style={styles.fullMapArea}>{CursorComponent}</View>
+        </PanGestureHandler>
       </View>
     );
   }
@@ -154,6 +162,8 @@ const styles = StyleSheet.create({
 
   cursor: {
     position: 'absolute',
+    width: 40,
+    height: 40,
     zIndex: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -170,16 +180,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
-  },
-
-  shadow: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    right: 4,
-    bottom: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 999,
-    zIndex: -1,
   },
 });
