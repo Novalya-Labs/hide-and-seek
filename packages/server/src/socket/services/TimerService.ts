@@ -42,4 +42,25 @@ export class TimerService {
   hasActiveTimer(roomId: string): boolean {
     return this.timers.has(roomId);
   }
+
+  startResultsTimer(roomId: string, onTick: (timeLeft: number) => void, onEnd: () => void, duration = 5000): void {
+    this.clearTimer(roomId);
+
+    const startTime = Date.now();
+
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const timeLeft = Math.max(0, duration - elapsed);
+
+      onTick(timeLeft);
+
+      if (timeLeft <= 0) {
+        this.clearTimer(roomId);
+        onEnd();
+      }
+    }, 1000);
+
+    this.timers.set(roomId, timer);
+    logger.info(`Results timer started for room ${roomId}, duration: ${duration}ms`);
+  }
 }

@@ -25,6 +25,7 @@ class RoomManager {
   private playerToRoom = new Map<string, string>();
   private roomCounter = 0;
   private gameStates = new Map<string, GameState>();
+  private playersFoundThisRound = new Map<string, number>(); // roomId -> count
   private io: Server | null = null;
   private gameService = new GameService();
   private timerService = new TimerService();
@@ -146,6 +147,7 @@ class RoomManager {
     if (room.players.length === 0) {
       this.rooms.delete(roomId);
       this.gameStates.delete(roomId);
+      this.playersFoundThisRound.delete(roomId);
       this.timerService.clearTimer(roomId);
       logger.info(`Room ${roomId} deleted (no players left)`);
       return { room: null, wasHost };
@@ -227,6 +229,9 @@ class RoomManager {
     gameState.timeLeft = 30000;
     gameState.phaseStartTime = Date.now();
     gameState.seekerPosition = { x: 0, y: 0 };
+
+    // Reset the players found counter for this round
+    this.playersFoundThisRound.set(roomId, 0);
 
     this.socketService?.emitGameStateUpdate(roomId, gameState);
 
@@ -311,6 +316,10 @@ class RoomManager {
         foundPlayer.isAlive = false;
         delete gameState.hiddenPlayers[hiddenPlayerSocketId];
 
+        // Increment the counter of players found this round
+        const currentCount = this.playersFoundThisRound.get(roomId) || 0;
+        this.playersFoundThisRound.set(roomId, currentCount + 1);
+
         this.socketService?.emitPlayerFound(roomId, foundPlayer.username);
 
         logger.info(`Player ${foundPlayer.username} found in spot ${spotId} in room ${roomId}`);
@@ -320,7 +329,8 @@ class RoomManager {
     spot.isOccupied = false;
     delete spot.occupiedBy;
 
-    const newPhase = this.gameService.checkGameEndConditions(room, gameState);
+    const playersFoundThisRound = this.playersFoundThisRound.get(roomId) || 0;
+    const newPhase = this.gameService.checkGameEndConditions(room, gameState, playersFoundThisRound);
     if (newPhase) {
       this.endSeekingPhase(roomId, newPhase);
     }
@@ -337,6 +347,11 @@ class RoomManager {
     if (newPhase) {
       gameState.phase = newPhase;
       room.status = newPhase;
+
+      // If results phase, start timer for next round
+      if (newPhase === 'results') {
+        this.startResultsPhase(roomId);
+      }
     } else {
       const alivePlayers = room.players.filter((p) => p.isAlive && p.socketId !== gameState.seeker);
 
@@ -346,9 +361,8 @@ class RoomManager {
         room.status = 'ended';
       } else if (alivePlayers.length > 1) {
         gameState.phase = 'results';
-        gameState.currentRound++;
-        gameState.previousSeekers.push(gameState.seeker || '');
         room.status = 'results';
+        this.startResultsPhase(roomId);
       } else {
         gameState.phase = 'ended';
         room.status = 'ended';
@@ -358,6 +372,58 @@ class RoomManager {
     this.socketService?.emitGameStateUpdate(roomId, gameState);
 
     logger.info(`Seeking phase ended in room ${roomId}, phase: ${gameState.phase}`);
+  }
+
+  private startResultsPhase(roomId: string): void {
+    const gameState = this.gameStates.get(roomId);
+    if (!gameState) return;
+
+    gameState.timeLeft = 5000; // 5 seconds countdown
+    gameState.phaseStartTime = Date.now();
+
+    this.socketService?.emitGameStateUpdate(roomId, gameState);
+
+    this.timerService.startResultsTimer(
+      roomId,
+      (timeLeft) => {
+        gameState.timeLeft = timeLeft;
+        this.socketService?.emitGameStateUpdate(roomId, gameState);
+      },
+      () => {
+        this.startNewRound(roomId);
+      },
+    );
+
+    logger.info(`Results phase started in room ${roomId}, next round in 5 seconds`);
+  }
+
+  private startNewRound(roomId: string): void {
+    const room = this.rooms.get(roomId);
+    const gameState = this.gameStates.get(roomId);
+
+    if (!room || !gameState) return;
+
+    try {
+      // Reset game state for new round
+      this.gameService.resetForNewRound(room, gameState);
+
+      // Select new seeker
+      const newSeeker = this.gameService.selectRandomSeeker(room, gameState);
+      gameState.seeker = newSeeker.socketId;
+
+      // Start new hiding phase
+      this.startHidingPhase(roomId);
+
+      logger.info(
+        `New round started in room ${roomId}, round ${gameState.currentRound}, seeker: ${newSeeker.username}`,
+      );
+    } catch (error) {
+      logger.error(`Failed to start new round in room ${roomId}:`, error);
+      // If we can't start a new round, end the game
+      gameState.phase = 'ended';
+      room.status = 'ended';
+      this.socketService?.emitGameStateUpdate(roomId, gameState);
+    }
   }
 
   getGameState(roomId: string): GameState | undefined {
@@ -392,6 +458,7 @@ class RoomManager {
     this.rooms.clear();
     this.playerToRoom.clear();
     this.gameStates.clear();
+    this.playersFoundThisRound.clear();
     this.timerService.clearAllTimers();
     this.roomCounter = 0;
     logger.info('Room manager cleaned up');

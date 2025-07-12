@@ -1,15 +1,13 @@
-import type { Player, Room } from '@hide-and-seek/shared';
+import type { GameState, Player, Room } from '@hide-and-seek/shared';
 import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Text } from '../ui';
 import { PlayerCard } from './PlayerCard';
 
 interface GameResultsProps {
   currentRoom: Room;
-  gameState: {
-    phase: string;
-    winner: Player | null;
-  };
+  gameState: GameState;
   user: {
     username: string;
   } | null;
@@ -18,6 +16,22 @@ interface GameResultsProps {
 
 export const GameResults: React.FC<GameResultsProps> = ({ currentRoom, gameState, user, getSeekerUsername }) => {
   const router = useRouter();
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (gameState.phase === 'results' && gameState.timeLeft > 0) {
+      const interval = setInterval(() => {
+        const remaining = Math.max(0, gameState.timeLeft - (Date.now() - gameState.phaseStartTime));
+        setCountdown(Math.ceil(remaining / 1000));
+
+        if (remaining <= 0) {
+          clearInterval(interval);
+        }
+      }, 100);
+
+      return () => clearInterval(interval);
+    }
+  }, [gameState.phase, gameState.timeLeft, gameState.phaseStartTime]);
 
   if (!currentRoom) return null;
 
@@ -48,7 +62,17 @@ export const GameResults: React.FC<GameResultsProps> = ({ currentRoom, gameState
           </View>
         )}
 
-        <Text style={styles.resultsTitle}>{phase === 'ended' ? 'Final Results' : 'Round Results'}</Text>
+        <Text style={styles.resultsTitle}>
+          {phase === 'ended' ? 'Final Results' : `Round ${gameState.currentRound} Results`}
+        </Text>
+
+        {phase === 'results' && countdown > 0 && (
+          <View style={styles.countdownContainer}>
+            <Text style={styles.countdownText}>Next round in</Text>
+            <Text style={styles.countdownNumber}>{countdown}</Text>
+            <Text style={styles.countdownText}>seconds</Text>
+          </View>
+        )}
 
         <View style={styles.playersList}>
           {sortedPlayers.map((player) => (
@@ -107,5 +131,31 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#856404',
+  },
+
+  countdownContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BBDEFB',
+  },
+
+  countdownText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1565C0',
+    marginHorizontal: 4,
+  },
+
+  countdownNumber: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#0D47A1',
+    marginHorizontal: 8,
   },
 });
