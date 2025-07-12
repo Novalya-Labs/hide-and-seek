@@ -134,11 +134,37 @@ const LobbyScreen: React.FC = () => {
 
       <CreateRoomSheet visible={showCreateForm} onClose={() => setShowCreateForm(false)} />
       <JoinRoomSheet visible={showJoinForm} onClose={() => setShowJoinForm(false)} />
+      {/* <View style={styles.mapPreview}>
+        <View style={styles.mapPreviewContainer}>
+          <Image
+            source={require('@/assets/images/maps/pleasant-park.png')}
+            style={styles.mapPreviewImage}
+            resizeMode="contain"
+          />
+          {MAPS[2].hidingSpots.map((spot) => renderHidingSpot(spot, screenWidth, screenHeight))}
+        </View>
+      </View> */}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  // mapPreview: {
+  //   backgroundColor: 'red',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   width: '100%',
+  // },
+  // mapPreviewContainer: {
+  //   backgroundColor: 'blue',
+  //   position: 'relative',
+  //   height: 430,
+  //   width: '100%',
+  // },
+  // mapPreviewImage: {
+  //   width: '100%',
+  //   height: '100%',
+  // },
   container: {
     flex: 1,
   },

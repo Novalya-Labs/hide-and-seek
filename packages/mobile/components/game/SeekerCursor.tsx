@@ -60,9 +60,9 @@ export const SeekerCursor: React.FC<SeekerCursorProps> = ({
           if (!isCurrentSeeker) return;
 
           setIsDragging(true);
-          cursorX.setValue(event.absoluteX);
-          cursorY.setValue(event.absoluteY);
-          updateSeekerPosition(event.absoluteX, event.absoluteY);
+          cursorX.setValue(event.x);
+          cursorY.setValue(event.y);
+          updateSeekerPosition(event.x, event.y);
 
           Animated.spring(scale, {
             toValue: 1.2,
@@ -72,9 +72,9 @@ export const SeekerCursor: React.FC<SeekerCursorProps> = ({
         .onUpdate((event) => {
           if (!isCurrentSeeker) return;
 
-          cursorX.setValue(event.absoluteX);
-          cursorY.setValue(event.absoluteY);
-          updateSeekerPosition(event.absoluteX, event.absoluteY);
+          cursorX.setValue(event.x);
+          cursorY.setValue(event.y);
+          updateSeekerPosition(event.x, event.y);
         })
         .onEnd(() => {
           setIsDragging(false);

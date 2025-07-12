@@ -419,9 +419,6 @@ const styles = StyleSheet.create({
   mapContainer: {
     flex: 1,
     position: 'relative',
-    backgroundColor: '#FFFFFF',
-    margin: 16,
-    borderRadius: 12,
     overflow: 'hidden',
   },
 
@@ -520,12 +517,7 @@ const styles = StyleSheet.create({
   },
 
   gameInfoCard: {
-    backgroundColor: '#FFFFFF',
-    margin: 16,
     padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E5E7',
   },
 
   gameInfoRow: {

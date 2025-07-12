@@ -39,6 +39,14 @@ export class GameService {
   }
 
   isPositionInSpot(position: SeekerPosition, spot: HidingSpot): boolean {
+    // Safety check for invalid coordinates
+    if (!position || typeof position.x !== 'number' || typeof position.y !== 'number') {
+      return false;
+    }
+    if (isNaN(position.x) || isNaN(position.y) || !isFinite(position.x) || !isFinite(position.y)) {
+      return false;
+    }
+
     return (
       position.x >= spot.x &&
       position.x <= spot.x + spot.width &&
